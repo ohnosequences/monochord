@@ -4,5 +4,5 @@ An exploration of string diagrams and related graphical languages for monoidal c
 
 ## Technology
 
-- [Elm](https://elm-lang.org/)
+- [Elm](http://elm-lang.org/)
 
