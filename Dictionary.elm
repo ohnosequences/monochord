@@ -83,269 +83,269 @@ get targetKey dict =
              EQ -> Just value
              GT -> get targetKey right
 
--- 
--- {-| Determine if a key is in a dictionary. -}
--- member : (Ord c) -> Dict (Ord c) v -> Bool
--- member key dict =
---     case get key dict of
---       Just _ -> True
---       Nothing -> False
--- 
--- 
--- {-| Determine the number of key-value pairs in the dictionary. -}
--- size : Dict (Ord c) v -> Int
--- size dict =
---   case dict of
---     RBEmpty_elm_builtin _ ->
---       0
--- 
---     RBNode_elm_builtin _ _ _ left right ->
---       1 + size left + size right
--- 
--- 
--- {-| Determine if a dictionary is empty.
---     isEmpty empty == True
--- -}
--- isEmpty : Dict (Ord c) v -> Bool
--- isEmpty dict =
---     dict == empty
--- 
--- 
--- ensureBlackRoot : Dict (Ord k) v -> Dict (Ord k) v
--- ensureBlackRoot dict =
---     case dict of
---       RBNode_elm_builtin Red key value left right ->
---           RBNode_elm_builtin Black key value left right
--- 
---       RBNode_elm_builtin Black _ _ _ _ ->
---           dict
--- 
---       RBEmpty_elm_builtin LBlack ->
---           dict
--- 
--- 
--- {-| Insert a key-value pair into a dictionary. Replaces value when there is
--- a collision. -}
--- insert : (Ord c) -> v -> Dict (Ord c) v -> Dict (Ord c) v
--- insert key value dict =
---     update key (always (Just value)) dict
--- 
--- 
--- {-| Remove a key-value pair from a dictionary. If the key is not found,
--- no changes are made. -}
--- remove : (Ord c) -> Dict (Ord c) v -> Dict (Ord c) v
--- remove key dict =
---     update key (always Nothing) dict
--- 
--- 
--- type Flag = Insert | Remove | Same
--- 
--- showFlag : Flag -> String
--- showFlag f = case f of
---   Insert -> "Insert"
---   Remove -> "Remove"
---   Same   -> "Same"
--- 
--- 
--- {-| Update the value of a dictionary for a specific key with a given function. -}
--- update : (Ord c) -> (Maybe v -> Maybe v) -> Dict (Ord c) v -> Dict (Ord c) v
--- update k alter dict =
---   let up dict =
---           case dict of
---             RBEmpty_elm_builtin LBlack ->
---                 case alter Nothing of
---                   Nothing -> (Same, empty)
---                   Just v  -> (Insert, RBNode_elm_builtin Red k v empty empty)
--- 
---             RBNode_elm_builtin clr key value left right ->
---                 case .compr k key of
---                   EQ ->
---                     case alter (Just value) of
---                       Nothing -> (Remove, rem clr left right)
---                       Just newValue ->
---                           (Same, RBNode_elm_builtin clr key newValue left right)
--- 
---                   LT ->
---                     let (flag, newLeft) = up left in
---                     case flag of
---                       Same   -> (Same, RBNode_elm_builtin clr key value newLeft right)
---                       Insert -> (Insert, balance clr key value newLeft right)
---                       Remove -> (Remove, bubble clr key value newLeft right)
--- 
---                   GT ->
---                     let (flag, newRight) = up right in
---                     case flag of
---                       Same   -> (Same, RBNode_elm_builtin clr key value left newRight)
---                       Insert -> (Insert, balance clr key value left newRight)
---                       Remove -> (Remove, bubble clr key value left newRight)
--- 
---       (flag, updatedDict) = up dict
---   in
---       case flag of
---         Same   -> updatedDict
---         Insert -> ensureBlackRoot updatedDict
---         Remove -> blacken updatedDict
--- 
--- 
--- {-| Create a dictionary with one key-value pair. -}
--- singleton : (Ord c) -> v -> Dict (Ord c) v
--- singleton key value =
---     insert key value empty
--- 
--- 
--- isBBlack : Dict (Ord k) v -> Bool
--- isBBlack dict =
---     case dict of
---       RBNode_elm_builtin BBlack _ _ _ _ -> True
---       RBEmpty_elm_builtin LBBlack -> True
---       _ -> False
--- 
--- 
--- moreBlack : NColor -> NColor
--- moreBlack color =
---     case color of
---       Black  -> BBlack
---       Red    -> Black
---       NBlack -> Red
---       BBlack -> Debug.crash "Can't make a double black node more black!"
--- 
--- 
--- lessBlack : NColor -> NColor
--- lessBlack color =
---     case color of
---       BBlack -> Black
---       Black  -> Red
---       Red    -> NBlack
---       NBlack -> Debug.crash "Can't make a negative black node less black!"
--- 
--- 
--- lessBlackTree : Dict (Ord k) v -> Dict (Ord k) v
--- lessBlackTree dict =
---     case dict of
---       RBNode_elm_builtin c k v l r -> RBNode_elm_builtin (lessBlack c) k v l r
---       RBEmpty_elm_builtin LBBlack -> RBEmpty_elm_builtin LBlack
--- 
--- 
--- reportRemBug : String -> NColor -> String -> String -> a
--- reportRemBug msg c lgot rgot =
---   Debug.crash <|
---     String.concat
---     [ "Internal red-black tree invariant violated, expected "
---     , msg, " and got ", showNColor c, "/", lgot, "/", rgot
---     , "\nPlease report this bug to <https://github.com/elm-lang/Elm/issues>"
---     ]
--- 
--- 
--- -- Remove the top node from the tree, may leave behind BBlacks
--- rem : NColor -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
--- rem c l r =
---     case (l, r) of
---       (RBEmpty_elm_builtin _, RBEmpty_elm_builtin _) ->
---           case c of
---             Red   -> RBEmpty_elm_builtin LBlack
---             Black -> RBEmpty_elm_builtin LBBlack
--- 
---       (RBEmpty_elm_builtin cl, RBNode_elm_builtin cr k' v' l' r') ->
---           case (c, cl, cr) of
---             (Black, LBlack, Red) ->
---                 RBNode_elm_builtin Black k' v' l' r'
--- 
---             _ ->
---                 reportRemBug "Black/LBlack/Red" c (showLColor cl) (showNColor cr)
--- 
---       (RBNode_elm_builtin cl k' v' l' r', RBEmpty_elm_builtin cr) ->
---           case (c, cl, cr) of
---             (Black, Red, LBlack) ->
---                 RBNode_elm_builtin Black k' v' l' r'
--- 
---             _ ->
---                 reportRemBug "Black/Red/LBlack" c (showNColor cl) (showLColor cr)
--- 
---       -- l and r are both RBNodes
---       (RBNode_elm_builtin cl kl vl ll rl, RBNode_elm_builtin _ _ _ _ _) ->
---           let (k, v) = maxWithDefault kl vl rl
---               l'     = remove_max cl kl vl ll rl
---           in
---               bubble c k v l' r
--- 
--- 
--- -- Kills a BBlack or moves it upward, may leave behind NBlack
--- bubble : NColor -> k -> v -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
--- bubble c k v l r =
---     if isBBlack l || isBBlack r
---         then balance (moreBlack c) k v (lessBlackTree l) (lessBlackTree r)
---         else RBNode_elm_builtin c k v l r
--- 
--- 
--- -- Removes rightmost node, may leave root as BBlack
--- remove_max : NColor -> k -> v -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
--- remove_max c k v l r =
---     case r of
---       RBEmpty_elm_builtin _ ->
---           rem c l r
--- 
---       RBNode_elm_builtin cr kr vr lr rr ->
---           bubble c k v l (remove_max cr kr vr lr rr)
--- 
--- 
--- -- generalized tree balancing act
--- balance : NColor -> k -> v -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
--- balance c k v l r =
---     balance_node (RBNode_elm_builtin c k v l r)
--- 
--- 
--- blackish : Dict (Ord k) v -> Bool
--- blackish t =
---     case t of
---       RBNode_elm_builtin c _ _ _ _ -> c == Black || c == BBlack
---       RBEmpty_elm_builtin _        -> True
--- 
--- 
--- balance_node : Dict (Ord k) v -> Dict (Ord k) v
--- balance_node t =
---   let assemble col xk xv yk yv zk zv a b c d =
---         RBNode_elm_builtin (lessBlack col) yk yv (RBNode_elm_builtin Black xk xv a b) (RBNode_elm_builtin Black zk zv c d)
---   in
---    if blackish t
---    then case t of
---      RBNode_elm_builtin col zk zv (RBNode_elm_builtin Red yk yv (RBNode_elm_builtin Red xk xv a b) c) d ->
---        assemble col xk xv yk yv zk zv a b c d
---      RBNode_elm_builtin col zk zv (RBNode_elm_builtin Red xk xv a (RBNode_elm_builtin Red yk yv b c)) d ->
---        assemble col xk xv yk yv zk zv a b c d
---      RBNode_elm_builtin col xk xv a (RBNode_elm_builtin Red zk zv (RBNode_elm_builtin Red yk yv b c) d) ->
---        assemble col xk xv yk yv zk zv a b c d
---      RBNode_elm_builtin col xk xv a (RBNode_elm_builtin Red yk yv b (RBNode_elm_builtin Red zk zv c d)) ->
---        assemble col xk xv yk yv zk zv a b c d
--- 
---      RBNode_elm_builtin BBlack xk xv a (RBNode_elm_builtin NBlack zk zv (RBNode_elm_builtin Black yk yv b c) d) ->
---        case d of
---          (RBNode_elm_builtin Black _ _ _ _) ->
---            RBNode_elm_builtin Black yk yv (RBNode_elm_builtin Black xk xv a b) (balance Black zk zv c (redden d))
---          _ -> t
--- 
---      RBNode_elm_builtin BBlack zk zv (RBNode_elm_builtin NBlack xk xv a (RBNode_elm_builtin Black yk yv b c)) d ->
---        case a of
---          (RBNode_elm_builtin Black _ _ _ _) ->
---            RBNode_elm_builtin Black yk yv (balance Black xk xv (redden a) b) (RBNode_elm_builtin Black zk zv c d)
---          _ -> t
---      _ -> t
---    else t
--- 
--- 
--- -- make the top node black
--- blacken : Dict (Ord k) v -> Dict (Ord k) v
--- blacken t =
---     case t of
---       RBEmpty_elm_builtin _ -> RBEmpty_elm_builtin LBlack
---       RBNode_elm_builtin _ k v l r -> RBNode_elm_builtin Black k v l r
--- 
--- 
--- -- make the top node red
--- redden : Dict (Ord k) v -> Dict (Ord k) v
--- redden t =
---     case t of
---       RBEmpty_elm_builtin _ -> Debug.crash "can't make a Leaf red"
---       RBNode_elm_builtin _ k v l r -> RBNode_elm_builtin Red k v l r
+
+{-| Determine if a key is in a dictionary. -}
+member : (Ord c) -> Dict (Ord c) v -> Bool
+member key dict =
+    case get key dict of
+      Just _ -> True
+      Nothing -> False
+
+
+{-| Determine the number of key-value pairs in the dictionary. -}
+size : Dict (Ord c) v -> Int
+size dict =
+  case dict of
+    RBEmpty_elm_builtin _ ->
+      0
+
+    RBNode_elm_builtin _ _ _ left right ->
+      1 + size left + size right
+
+
+{-| Determine if a dictionary is empty.
+    isEmpty empty == True
+-}
+isEmpty : Dict (Ord c) v -> Bool
+isEmpty dict =
+    dict == empty
+
+
+ensureBlackRoot : Dict (Ord k) v -> Dict (Ord k) v
+ensureBlackRoot dict =
+    case dict of
+      RBNode_elm_builtin Red key value left right ->
+          RBNode_elm_builtin Black key value left right
+
+      RBNode_elm_builtin Black _ _ _ _ ->
+          dict
+
+      RBEmpty_elm_builtin LBlack ->
+          dict
+
+
+{-| Insert a key-value pair into a dictionary. Replaces value when there is
+a collision. -}
+insert : (Ord c) -> v -> Dict (Ord c) v -> Dict (Ord c) v
+insert key value dict =
+    update key (always (Just value)) dict
+
+
+{-| Remove a key-value pair from a dictionary. If the key is not found,
+no changes are made. -}
+remove : (Ord c) -> Dict (Ord c) v -> Dict (Ord c) v
+remove key dict =
+    update key (always Nothing) dict
+
+
+type Flag = Insert | Remove | Same
+
+showFlag : Flag -> String
+showFlag f = case f of
+  Insert -> "Insert"
+  Remove -> "Remove"
+  Same   -> "Same"
+
+
+{-| Update the value of a dictionary for a specific key with a given function. -}
+update : (Ord c) -> (Maybe v -> Maybe v) -> Dict (Ord c) v -> Dict (Ord c) v
+update k alter dict =
+  let up dict =
+          case dict of
+            RBEmpty_elm_builtin LBlack ->
+                case alter Nothing of
+                  Nothing -> (Same, empty)
+                  Just v  -> (Insert, RBNode_elm_builtin Red k v empty empty)
+
+            RBNode_elm_builtin clr key value left right ->
+                case k.compr {key-compr} of
+                  EQ ->
+                    case alter (Just value) of
+                      Nothing -> (Remove, rem clr left right)
+                      Just newValue ->
+                          (Same, RBNode_elm_builtin clr key newValue left right)
+
+                  LT ->
+                    let (flag, newLeft) = up left in
+                    case flag of
+                      Same   -> (Same, RBNode_elm_builtin clr key value newLeft right)
+                      Insert -> (Insert, balance clr key value newLeft right)
+                      Remove -> (Remove, bubble clr key value newLeft right)
+
+                  GT ->
+                    let (flag, newRight) = up right in
+                    case flag of
+                      Same   -> (Same, RBNode_elm_builtin clr key value left newRight)
+                      Insert -> (Insert, balance clr key value left newRight)
+                      Remove -> (Remove, bubble clr key value left newRight)
+
+      (flag, updatedDict) = up dict
+  in
+      case flag of
+        Same   -> updatedDict
+        Insert -> ensureBlackRoot updatedDict
+        Remove -> blacken updatedDict
+
+
+{-| Create a dictionary with one key-value pair. -}
+singleton : (Ord c) -> v -> Dict (Ord c) v
+singleton key value =
+    insert key value empty
+
+
+isBBlack : Dict (Ord k) v -> Bool
+isBBlack dict =
+    case dict of
+      RBNode_elm_builtin BBlack _ _ _ _ -> True
+      RBEmpty_elm_builtin LBBlack -> True
+      _ -> False
+
+
+moreBlack : NColor -> NColor
+moreBlack color =
+    case color of
+      Black  -> BBlack
+      Red    -> Black
+      NBlack -> Red
+      BBlack -> Debug.crash "Can't make a double black node more black!"
+
+
+lessBlack : NColor -> NColor
+lessBlack color =
+    case color of
+      BBlack -> Black
+      Black  -> Red
+      Red    -> NBlack
+      NBlack -> Debug.crash "Can't make a negative black node less black!"
+
+
+lessBlackTree : Dict (Ord k) v -> Dict (Ord k) v
+lessBlackTree dict =
+    case dict of
+      RBNode_elm_builtin c k v l r -> RBNode_elm_builtin (lessBlack c) k v l r
+      RBEmpty_elm_builtin LBBlack -> RBEmpty_elm_builtin LBlack
+
+
+reportRemBug : String -> NColor -> String -> String -> a
+reportRemBug msg c lgot rgot =
+  Debug.crash <|
+    String.concat
+    [ "Internal red-black tree invariant violated, expected "
+    , msg, " and got ", showNColor c, "/", lgot, "/", rgot
+    , "\nPlease report this bug to <https://github.com/elm-lang/Elm/issues>"
+    ]
+
+
+-- Remove the top node from the tree, may leave behind BBlacks
+rem : NColor -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
+rem c l r =
+    case (l, r) of
+      (RBEmpty_elm_builtin _, RBEmpty_elm_builtin _) ->
+          case c of
+            Red   -> RBEmpty_elm_builtin LBlack
+            Black -> RBEmpty_elm_builtin LBBlack
+
+      (RBEmpty_elm_builtin cl, RBNode_elm_builtin cr k' v' l' r') ->
+          case (c, cl, cr) of
+            (Black, LBlack, Red) ->
+                RBNode_elm_builtin Black k' v' l' r'
+
+            _ ->
+                reportRemBug "Black/LBlack/Red" c (showLColor cl) (showNColor cr)
+
+      (RBNode_elm_builtin cl k' v' l' r', RBEmpty_elm_builtin cr) ->
+          case (c, cl, cr) of
+            (Black, Red, LBlack) ->
+                RBNode_elm_builtin Black k' v' l' r'
+
+            _ ->
+                reportRemBug "Black/Red/LBlack" c (showNColor cl) (showLColor cr)
+
+      -- l and r are both RBNodes
+      (RBNode_elm_builtin cl kl vl ll rl, RBNode_elm_builtin _ _ _ _ _) ->
+          let (k, v) = maxWithDefault kl vl rl
+              l'     = remove_max cl kl vl ll rl
+          in
+              bubble c k v l' r
+
+
+-- Kills a BBlack or moves it upward, may leave behind NBlack
+bubble : NColor -> (Ord k) -> v -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
+bubble c k v l r =
+    if isBBlack l || isBBlack r
+        then balance (moreBlack c) k v (lessBlackTree l) (lessBlackTree r)
+        else RBNode_elm_builtin c k v l r
+
+
+-- Removes rightmost node, may leave root as BBlack
+remove_max : NColor -> (Ord k) -> v -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
+remove_max c k v l r =
+    case r of
+      RBEmpty_elm_builtin _ ->
+          rem c l r
+
+      RBNode_elm_builtin cr kr vr lr rr ->
+          bubble c k v l (remove_max cr kr vr lr rr)
+
+
+-- generalized tree balancing act
+balance : NColor -> (Ord k) -> v -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
+balance c k v l r =
+    balance_node (RBNode_elm_builtin c k v l r)
+
+
+blackish : Dict (Ord k) v -> Bool
+blackish t =
+    case t of
+      RBNode_elm_builtin c _ _ _ _ -> c == Black || c == BBlack
+      RBEmpty_elm_builtin _        -> True
+
+
+balance_node : Dict (Ord k) v -> Dict (Ord k) v
+balance_node t =
+  let assemble col xk xv yk yv zk zv a b c d =
+        RBNode_elm_builtin (lessBlack col) yk yv (RBNode_elm_builtin Black xk xv a b) (RBNode_elm_builtin Black zk zv c d)
+  in
+   if blackish t
+   then case t of
+     RBNode_elm_builtin col zk zv (RBNode_elm_builtin Red yk yv (RBNode_elm_builtin Red xk xv a b) c) d ->
+       assemble col xk xv yk yv zk zv a b c d
+     RBNode_elm_builtin col zk zv (RBNode_elm_builtin Red xk xv a (RBNode_elm_builtin Red yk yv b c)) d ->
+       assemble col xk xv yk yv zk zv a b c d
+     RBNode_elm_builtin col xk xv a (RBNode_elm_builtin Red zk zv (RBNode_elm_builtin Red yk yv b c) d) ->
+       assemble col xk xv yk yv zk zv a b c d
+     RBNode_elm_builtin col xk xv a (RBNode_elm_builtin Red yk yv b (RBNode_elm_builtin Red zk zv c d)) ->
+       assemble col xk xv yk yv zk zv a b c d
+
+     RBNode_elm_builtin BBlack xk xv a (RBNode_elm_builtin NBlack zk zv (RBNode_elm_builtin Black yk yv b c) d) ->
+       case d of
+         (RBNode_elm_builtin Black _ _ _ _) ->
+           RBNode_elm_builtin Black yk yv (RBNode_elm_builtin Black xk xv a b) (balance Black zk zv c (redden d))
+         _ -> t
+
+     RBNode_elm_builtin BBlack zk zv (RBNode_elm_builtin NBlack xk xv a (RBNode_elm_builtin Black yk yv b c)) d ->
+       case a of
+         (RBNode_elm_builtin Black _ _ _ _) ->
+           RBNode_elm_builtin Black yk yv (balance Black xk xv (redden a) b) (RBNode_elm_builtin Black zk zv c d)
+         _ -> t
+     _ -> t
+   else t
+
+
+-- make the top node black
+blacken : Dict (Ord k) v -> Dict (Ord k) v
+blacken t =
+    case t of
+      RBEmpty_elm_builtin _ -> RBEmpty_elm_builtin LBlack
+      RBNode_elm_builtin _ k v l r -> RBNode_elm_builtin Black k v l r
+
+
+-- make the top node red
+redden : Dict (Ord k) v -> Dict (Ord k) v
+redden t =
+    case t of
+      RBEmpty_elm_builtin _ -> Debug.crash "can't make a Leaf red"
+      RBNode_elm_builtin _ k v l r -> RBNode_elm_builtin Red k v l r
 -- 
 -- 
 -- {-| Apply a function to all values in a dictionary. -}
