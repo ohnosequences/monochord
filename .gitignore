@@ -19,3 +19,6 @@ data/out/
 .atom*
 .ensime*
 .idea*
+
+# Elm build artifacts
+elm-stuff/build-artifacts
