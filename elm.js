@@ -654,92 +654,6 @@ Elm.Debug.make = function (_elm) {
                        ,trace: trace};
    return _elm.Debug.values;
 };
-Elm.Graph = Elm.Graph || {};
-Elm.Graph.make = function (_elm) {
-   "use strict";
-   _elm.Graph = _elm.Graph || {};
-   if (_elm.Graph.values)
-   return _elm.Graph.values;
-   var _op = {},
-   _N = Elm.Native,
-   _U = _N.Utils.make(_elm),
-   _L = _N.List.make(_elm),
-   $moduleName = "Graph",
-   $Basics = Elm.Basics.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var EtoE = {ctor: "EtoE"};
-   var EtoV = {ctor: "EtoV"};
-   var VtoE = {ctor: "VtoE"};
-   var E = {ctor: "E"};
-   var V = {ctor: "V"};
-   var typegraph = {_: {}
-                   ,edges: _L.fromArray([VtoE
-                                        ,EtoV
-                                        ,EtoE])
-                   ,source: function (ed) {
-                      return function () {
-                         switch (ed.ctor)
-                         {case "EtoE": return E;
-                            case "EtoV": return E;
-                            case "VtoE": return V;}
-                         _U.badCase($moduleName,
-                         "between lines 27 and 30");
-                      }();
-                   }
-                   ,target: function (ed) {
-                      return function () {
-                         switch (ed.ctor)
-                         {case "EtoE": return E;
-                            case "EtoV": return V;
-                            case "VtoE": return E;}
-                         _U.badCase($moduleName,
-                         "between lines 31 and 35");
-                      }();
-                   }
-                   ,vertices: _L.fromArray([V,E])};
-   var complete = function (n) {
-      return {_: {}
-             ,edges: A2($List.concatMap,
-             function (f) {
-                return A2($List.map,
-                f,
-                _L.range(1,n));
-             },
-             A2($List.map,
-             F2(function (v0,v1) {
-                return {ctor: "_Tuple2"
-                       ,_0: v0
-                       ,_1: v1};
-             }),
-             _L.range(1,n)))
-             ,source: $Basics.fst
-             ,target: $Basics.snd
-             ,vertices: _L.range(1,n)};
-   };
-   var Graph = F4(function (a,
-   b,
-   c,
-   d) {
-      return {_: {}
-             ,edges: a
-             ,source: c
-             ,target: d
-             ,vertices: b};
-   });
-   _elm.Graph.values = {_op: _op
-                       ,Graph: Graph
-                       ,complete: complete
-                       ,V: V
-                       ,E: E
-                       ,VtoE: VtoE
-                       ,EtoV: EtoV
-                       ,EtoE: EtoE
-                       ,typegraph: typegraph};
-   return _elm.Graph.values;
-};
 Elm.Graphics = Elm.Graphics || {};
 Elm.Graphics.Collage = Elm.Graphics.Collage || {};
 Elm.Graphics.Collage.make = function (_elm) {
@@ -2055,6 +1969,36 @@ Elm.Maybe.make = function (_elm) {
                        ,Just: Just
                        ,Nothing: Nothing};
    return _elm.Maybe.values;
+};
+Elm.MonGraph = Elm.MonGraph || {};
+Elm.MonGraph.make = function (_elm) {
+   "use strict";
+   _elm.MonGraph = _elm.MonGraph || {};
+   if (_elm.MonGraph.values)
+   return _elm.MonGraph.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "MonGraph",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var MonGraph = F4(function (a,
+   b,
+   c,
+   d) {
+      return {_: {}
+             ,edges: a
+             ,source: c
+             ,target: d
+             ,vertices: b};
+   });
+   _elm.MonGraph.values = {_op: _op
+                          ,MonGraph: MonGraph};
+   return _elm.MonGraph.values;
 };
 Elm.Native.Basics = {};
 Elm.Native.Basics.make = function(localRuntime) {

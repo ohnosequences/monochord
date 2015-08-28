@@ -1,0 +1,30 @@
+Elm.MonGraph = Elm.MonGraph || {};
+Elm.MonGraph.make = function (_elm) {
+   "use strict";
+   _elm.MonGraph = _elm.MonGraph || {};
+   if (_elm.MonGraph.values)
+   return _elm.MonGraph.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "MonGraph",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var MonGraph = F4(function (a,
+   b,
+   c,
+   d) {
+      return {_: {}
+             ,edges: a
+             ,source: c
+             ,target: d
+             ,vertices: b};
+   });
+   _elm.MonGraph.values = {_op: _op
+                          ,MonGraph: MonGraph};
+   return _elm.MonGraph.values;
+};
