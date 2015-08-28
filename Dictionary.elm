@@ -45,14 +45,14 @@ that lets you look up a `String` (such as user names) and find the assotiated
 `User`.
 -}
 type Dict k v
-    = RBNode_elm_builtin NColor k v (Dict (Ord k) v) (Dict (Ord k) v)
+    = RBNode_elm_builtin NColor k v (Dict k v) (Dict k v)
     | RBEmpty_elm_builtin LeafColor
     
     
 {-| Create an empty dictionary. -}
 empty : Dict (Ord c) v
 empty = RBEmpty_elm_builtin LBlack
--- 
+
 -- maxWithDefault : (Ord k) -> v -> Dict (Ord k) v -> ((Ord k), v)
 -- maxWithDefault k v r =
 --     case r of
@@ -61,8 +61,8 @@ empty = RBEmpty_elm_builtin LBlack
 -- 
 --       RBNode_elm_builtin _ kr vr _ rr ->
 --           maxWithDefault kr vr rr
--- 
--- 
+
+
 -- {-| Get the value associated with a key. If the key is not found, return
 -- `Nothing`. This is useful when you are not sure if a key will be in the
 -- dictionary.
@@ -82,7 +82,7 @@ empty = RBEmpty_elm_builtin LBlack
 --             LT -> get targetKey left
 --             EQ -> Just value
 --             GT -> get targetKey right
--- 
+
 -- 
 -- {-| Determine if a key is in a dictionary. -}
 -- member : (Ord c) -> Dict (Ord c) v -> Bool
