@@ -346,96 +346,96 @@ redden t =
     case t of
       RBEmpty_elm_builtin _ -> Debug.crash "can't make a Leaf red"
       RBNode_elm_builtin _ k v l r -> RBNode_elm_builtin Red k v l r
--- 
--- 
--- {-| Apply a function to all values in a dictionary. -}
--- map : ((Ord c) -> a -> b) -> Dict (Ord c) a -> Dict (Ord c) b
--- map f dict =
---     case dict of
---       RBEmpty_elm_builtin LBlack ->
---           RBEmpty_elm_builtin LBlack
--- 
---       RBNode_elm_builtin clr key value left right ->
---           RBNode_elm_builtin clr key (f key value) (map f left) (map f right)
--- 
--- 
--- {-| Fold over the key-value pairs in a dictionary, in order from lowest
--- key to highest key. -}
--- foldl : ((Ord c) -> v -> b -> b) -> b -> Dict (Ord c) v -> b
--- foldl f acc dict =
---     case dict of
---       RBEmpty_elm_builtin LBlack -> acc
--- 
---       RBNode_elm_builtin _ key value left right ->
---           foldl f (f key value (foldl f acc left)) right
--- 
--- 
--- {-| Fold over the key-value pairs in a dictionary, in order from highest
--- key to lowest key. -}
--- foldr : ((Ord c) -> v -> b -> b) -> b -> Dict (Ord c) v -> b
--- foldr f acc t =
---     case t of
---       RBEmpty_elm_builtin LBlack -> acc
--- 
---       RBNode_elm_builtin _ key value left right ->
---           foldr f (f key value (foldr f acc right)) left
--- 
--- 
--- {-| Combine two dictionaries. If there is a collision, preference is given
--- to the first dictionary. -}
--- union : Dict (Ord c) v -> Dict (Ord c) v -> Dict (Ord c) v
--- union t1 t2 =
---     foldl insert t2 t1
--- 
--- 
--- {-| Keep a key-value pair when its key appears in the second dictionary.
--- Preference is given to values in the first dictionary. -}
--- intersect : Dict (Ord c) v -> Dict (Ord c) v -> Dict (Ord c) v
--- intersect t1 t2 =
---     filter (\k _ -> k `member` t2) t1
--- 
--- 
--- {-| Keep a key-value pair when its key does not appear in the second dictionary.
--- -}
--- diff : Dict (Ord c) v -> Dict (Ord c) v -> Dict (Ord c) v
--- diff t1 t2 =
---     foldl (\k v t -> remove k t) t1 t2
--- 
--- 
--- {-| Get all of the keys in a dictionary. -}
--- keys : Dict (Ord c) v -> List (Ord c)
--- keys dict =
---     foldr (\key value keyList -> key :: keyList) [] dict
--- 
--- 
--- {-| Get all of the values in a dictionary. -}
--- values : Dict (Ord c) v -> List v
--- values dict =
---     foldr (\key value valueList -> value :: valueList) [] dict
--- 
--- 
--- {-| Convert a dictionary into an association list of key-value pairs. -}
--- toList : Dict (Ord c) v -> List ((Ord c),v)
--- toList dict =
---     foldr (\key value list -> (key,value) :: list) [] dict
--- 
--- 
--- {-| Convert an association list into a dictionary. -}
--- fromList : List ((Ord c),v) -> Dict (Ord c) v
--- fromList assocs =
---     List.foldl (\(key,value) dict -> insert key value dict) empty assocs
--- 
--- 
--- {-| Keep a key-value pair when it satisfies a predicate. -}
--- filter : ((Ord c) -> v -> Bool) -> Dict (Ord c) v -> Dict (Ord c) v
--- filter predicate dictionary =
---     let add key value dict =
---             if predicate key value
---                 then insert key value dict
---                 else dict
---     in
---         foldl add empty dictionary
--- 
+
+
+{-| Apply a function to all values in a dictionary. -}
+map : ((Ord c) -> a -> b) -> Dict (Ord c) a -> Dict (Ord c) b
+map f dict =
+    case dict of
+      RBEmpty_elm_builtin LBlack ->
+          RBEmpty_elm_builtin LBlack
+
+      RBNode_elm_builtin clr key value left right ->
+          RBNode_elm_builtin clr key (f key value) (map f left) (map f right)
+
+
+{-| Fold over the key-value pairs in a dictionary, in order from lowest
+key to highest key. -}
+foldl : ((Ord c) -> v -> b -> b) -> b -> Dict (Ord c) v -> b
+foldl f acc dict =
+    case dict of
+      RBEmpty_elm_builtin LBlack -> acc
+
+      RBNode_elm_builtin _ key value left right ->
+          foldl f (f key value (foldl f acc left)) right
+
+
+{-| Fold over the key-value pairs in a dictionary, in order from highest
+key to lowest key. -}
+foldr : ((Ord c) -> v -> b -> b) -> b -> Dict (Ord c) v -> b
+foldr f acc t =
+    case t of
+      RBEmpty_elm_builtin LBlack -> acc
+
+      RBNode_elm_builtin _ key value left right ->
+          foldr f (f key value (foldr f acc right)) left
+
+
+{-| Combine two dictionaries. If there is a collision, preference is given
+to the first dictionary. -}
+union : Dict (Ord c) v -> Dict (Ord c) v -> Dict (Ord c) v
+union t1 t2 =
+    foldl insert t2 t1
+
+
+{-| Keep a key-value pair when its key appears in the second dictionary.
+Preference is given to values in the first dictionary. -}
+intersect : Dict (Ord c) v -> Dict (Ord c) v -> Dict (Ord c) v
+intersect t1 t2 =
+    filter (\k _ -> k `member` t2) t1
+
+
+{-| Keep a key-value pair when its key does not appear in the second dictionary.
+-}
+diff : Dict (Ord c) v -> Dict (Ord c) v -> Dict (Ord c) v
+diff t1 t2 =
+    foldl (\k v t -> remove k t) t1 t2
+
+
+{-| Get all of the keys in a dictionary. -}
+keys : Dict (Ord c) v -> List (Ord c)
+keys dict =
+    foldr (\key value keyList -> key :: keyList) [] dict
+
+
+{-| Get all of the values in a dictionary. -}
+values : Dict (Ord c) v -> List v
+values dict =
+    foldr (\key value valueList -> value :: valueList) [] dict
+
+
+{-| Convert a dictionary into an association list of key-value pairs. -}
+toList : Dict (Ord c) v -> List ((Ord c),v)
+toList dict =
+    foldr (\key value list -> (key,value) :: list) [] dict
+
+
+{-| Convert an association list into a dictionary. -}
+fromList : List ((Ord c),v) -> Dict (Ord c) v
+fromList assocs =
+    List.foldl (\(key,value) dict -> insert key value dict) empty assocs
+
+
+{-| Keep a key-value pair when it satisfies a predicate. -}
+filter : ((Ord c) -> v -> Bool) -> Dict (Ord c) v -> Dict (Ord c) v
+filter predicate dictionary =
+    let add key value dict =
+            if predicate key value
+                then insert key value dict
+                else dict
+    in
+        foldl add empty dictionary
+
 -- 
 -- {-| Partition a dictionary according to a predicate. The first dictionary
 -- contains all key-value pairs which satisfy the predicate, and the second
