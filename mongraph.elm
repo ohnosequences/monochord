@@ -1,16 +1,18 @@
 module MonGraph where
 
-type alias MonGraph v e = {
-    edges : (Int,Int) -> List e,
-    vertices : List v,
-    source : e -> List v,
-    target : e -> List v
-  }
+import Dictionary
+
+type alias MonGraph v e =
+    { edges : Dict (Int,Int) (List e)
+    , vertices : List v
+    , source : Dict e (List v)
+    , target : Dict e (List v)
+    }
 
 -- Empty graph
-emptygraph : Graph v e 
+emptygraph : MonGraph a e 
 emptygraph =
-    { edges = []
+    { edges (n,m) = []
     , vetices = []
     , source e = []
     , target e = [] 
