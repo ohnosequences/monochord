@@ -13,7 +13,7 @@ type alias Graph a b =
 emptygraph : Graph (Ord (a)) b 
 emptygraph =
     { edges = []
-    , vetices = []
+    , vertices = []
     , source = empty
     , target = empty 
     }
