@@ -53,14 +53,14 @@ type Dict k v
 empty : Dict (Ord c) v
 empty = RBEmpty_elm_builtin LBlack
 
--- maxWithDefault : (Ord k) -> v -> Dict (Ord k) v -> ((Ord k), v)
--- maxWithDefault k v r =
---     case r of
---       RBEmpty_elm_builtin _ ->
---           (k, v)
--- 
---       RBNode_elm_builtin _ kr vr _ rr ->
---           maxWithDefault kr vr rr
+maxWithDefault : (Ord k) -> v -> Dict (Ord k) v -> ((Ord k), v)
+maxWithDefault k v r =
+    case r of
+      RBEmpty_elm_builtin _ ->
+          (k, v)
+
+      RBNode_elm_builtin _ kr vr _ rr ->
+          maxWithDefault kr vr rr
 
 
 -- {-| Get the value associated with a key. If the key is not found, return
