@@ -436,14 +436,16 @@ filter predicate dictionary =
     in
         foldl add empty dictionary
 
--- 
--- {-| Partition a dictionary according to a predicate. The first dictionary
--- contains all key-value pairs which satisfy the predicate, and the second
--- contains the rest.
--- -}
--- partition : ((Ord c) -> v -> Bool) -> Dict (Ord c) v -> (Dict (Ord c) v, Dict (Ord c) v)
--- partition predicate dict =
---     let add key value (t1, t2) =
---             if predicate key value
---                 then (insert key value t1, t2)
---                 else (t1, insert key value t2)
+
+{-| Partition a dictionary according to a predicate. The first dictionary
+contains all key-value pairs which satisfy the predicate, and the second
+contains the rest.
+-}
+partition : ((Ord c) -> v -> Bool) -> Dict (Ord c) v -> (Dict (Ord c) v, Dict (Ord c) v)
+partition predicate dict =
+    let add key value (t1, t2) =
+           if predicate key value
+               then (insert key value t1, t2)
+               else (t1, insert key value t2)
+    in
+        foldl add (empty, empty) dict
