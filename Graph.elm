@@ -11,7 +11,7 @@ type alias Graph v e =
 emptygraph : Graph v e 
 emptygraph =
     { edges = []
-    , vetices = []
-    , source = Nothing
-    , target = Nothing 
+    , vertices = []
+    , source e = Nothing
+    , target e = Nothing 
     }
