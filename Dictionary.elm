@@ -71,17 +71,17 @@ maxWithDefault k v r =
 --     get "Jerry" animals == Just Mouse
 --     get "Spike" animals == Nothing
 -- -}
---get : Ord c -> Dict (Ord c) v -> Maybe v
+get : Ord c -> Dict (Ord c) v -> Maybe v
 get targetKey dict =
     case dict of
       RBEmpty_elm_builtin LBlack ->
           Nothing
 
       RBNode_elm_builtin _ key value left right ->
-           case targetKey.compr key of
-             LT -> Nothing -- get targetKey left
-             EQ -> Nothing -- Just value
-             GT -> Nothing -- get targetKey right
+           case targetKey.compr {key-compr} of
+             LT -> get targetKey left
+             EQ -> Just value
+             GT -> get targetKey right
 
 -- 
 -- {-| Determine if a key is in a dictionary. -}
