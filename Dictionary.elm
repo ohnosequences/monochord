@@ -5,10 +5,7 @@ import Maybe exposing (..)
 import List exposing (..)
 import Debug
 import String
-
-{- Ord is an extensible type record for a type whose instances
-can be ordered. -}
-type alias Ord a = {a | compr : a -> Order}
+import Ord exposing (..)
 
 -- BBlack and NBlack should only be used during the deletion
 -- algorithm. Any other occurrence is a bug and should fail an assert.

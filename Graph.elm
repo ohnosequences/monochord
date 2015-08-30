@@ -1,6 +1,7 @@
 module Graph where
 
 import Dictionary exposing (..)
+import Ord exposing (..)
 
 type alias Graph e v = 
     { edges : List e
