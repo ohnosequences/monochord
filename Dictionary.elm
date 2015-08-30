@@ -47,8 +47,8 @@ that lets you look up a `String` (such as user names) and find the assotiated
 type Dict k v
     = RBNode_elm_builtin NColor k v (Dict k v) (Dict k v)
     | RBEmpty_elm_builtin LeafColor
-    
-    
+
+
 {-| Create an empty dictionary. -}
 empty : Dict (Ord c) v
 empty = RBEmpty_elm_builtin LBlack
