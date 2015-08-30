@@ -1,17 +1,23 @@
 module Graph where
 
-type alias Graph v e = 
+import Dictionary exposing (..)
+
+type alias Graph e v = 
     { edges : List e
     , vertices : List v
-    , source : e -> Maybe v
-    , target : e -> Maybe v
+    , source : Dict e v
+    , target : Dict e v
     }
 
 -- Empty graph
-emptygraph : Graph v e 
+emptygraph : Graph (Ord e) v 
 emptygraph =
     { edges = []
     , vertices = []
-    , source e = Nothing
-    , target e = Nothing 
+    , source = empty
+    , target = empty 
     }
+
+-- Building a graph
+addvertex : v -> Graph (Ord e) v -> Graph (Ord e) v
+addvertex a g = { g | vertices <- a :: g.vertices}  
