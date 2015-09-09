@@ -3,8 +3,8 @@ module MonGraph where
 type alias MonGraph v e = 
     { edges : (Int,Int) -> List e
     , vertices : List v
-    , source : e -> List v
-    , target : e -> List v
+    , source : (Int,Int) -> Dict e (List v)
+    , target : (Int,Int) -> Dict e (List v)
     }
 
 -- Empty graph
@@ -15,3 +15,8 @@ emptygraph =
     , source e = []
     , target e = [] 
     }
+
+
+asdf : Graph a -> qewr
+asdf g = case g of
+            {a | coprod:}
