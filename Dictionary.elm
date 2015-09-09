@@ -5,10 +5,8 @@ import Maybe exposing (..)
 import List exposing (..)
 import Debug
 import String
+import Ord exposing (..)
 
-{- Ord is an extensible type record for a type whose instances
-can be ordered. -}
-type alias Ord a = {a | compr : a -> Order}
 
 -- BBlack and NBlack should only be used during the deletion
 -- algorithm. Any other occurrence is a bug and should fail an assert.
@@ -50,10 +48,10 @@ type Dict k v
 
 
 {-| Create an empty dictionary. -}
-empty : Dict (Ord c) v
+empty : Dict c v
 empty = RBEmpty_elm_builtin LBlack
 
-maxWithDefault : (Ord k) -> v -> Dict (Ord k) v -> ((Ord k), v)
+maxWithDefault : k -> v -> Dict k v -> (k, v)
 maxWithDefault k v r =
     case r of
       RBEmpty_elm_builtin _ ->
@@ -71,29 +69,29 @@ maxWithDefault k v r =
 --     get "Jerry" animals == Just Mouse
 --     get "Spike" animals == Nothing
 -- -}
-get : Ord c -> Dict (Ord c) v -> Maybe v
-get targetKey dict =
+get : Ord c -> c -> Dict c v -> Maybe v
+get comp targetKey dict =
     case dict of
       RBEmpty_elm_builtin LBlack ->
           Nothing
 
       RBNode_elm_builtin _ key value left right ->
-           case targetKey.compr {key-compr} of
-             LT -> get targetKey left
+           case comp targetKey key of
+             LT -> get comp targetKey left
              EQ -> Just value
-             GT -> get targetKey right
+             GT -> get comp targetKey right
 
 
 {-| Determine if a key is in a dictionary. -}
-member : (Ord c) -> Dict (Ord c) v -> Bool
-member key dict =
-    case get key dict of
+member : Ord c -> c -> Dict c v -> Bool
+member comp key dict =
+    case get comp key dict of
       Just _ -> True
       Nothing -> False
 
 
 {-| Determine the number of key-value pairs in the dictionary. -}
-size : Dict (Ord c) v -> Int
+size : Dict c v -> Int
 size dict =
   case dict of
     RBEmpty_elm_builtin _ ->
@@ -106,12 +104,12 @@ size dict =
 {-| Determine if a dictionary is empty.
     isEmpty empty == True
 -}
-isEmpty : Dict (Ord c) v -> Bool
+isEmpty : Dict c v -> Bool
 isEmpty dict =
     dict == empty
 
 
-ensureBlackRoot : Dict (Ord k) v -> Dict (Ord k) v
+ensureBlackRoot : Dict k v -> Dict k v
 ensureBlackRoot dict =
     case dict of
       RBNode_elm_builtin Red key value left right ->
@@ -126,16 +124,16 @@ ensureBlackRoot dict =
 
 {-| Insert a key-value pair into a dictionary. Replaces value when there is
 a collision. -}
-insert : (Ord c) -> v -> Dict (Ord c) v -> Dict (Ord c) v
-insert key value dict =
-    update key (always (Just value)) dict
+insert : Ord c -> c -> v -> Dict c v -> Dict c v
+insert comp key value dict =
+    update comp key (always (Just value)) dict
 
 
 {-| Remove a key-value pair from a dictionary. If the key is not found,
 no changes are made. -}
-remove : (Ord c) -> Dict (Ord c) v -> Dict (Ord c) v
-remove key dict =
-    update key (always Nothing) dict
+remove : Ord c -> c -> Dict c v -> Dict c v
+remove comp key dict =
+    update comp key (always Nothing) dict
 
 
 type Flag = Insert | Remove | Same
@@ -148,8 +146,8 @@ showFlag f = case f of
 
 
 {-| Update the value of a dictionary for a specific key with a given function. -}
-update : (Ord c) -> (Maybe v -> Maybe v) -> Dict (Ord c) v -> Dict (Ord c) v
-update k alter dict =
+update : Ord c -> c -> (Maybe v -> Maybe v) -> Dict c v -> Dict c v
+update comp k alter dict =
   let up dict =
           case dict of
             RBEmpty_elm_builtin LBlack ->
@@ -158,7 +156,7 @@ update k alter dict =
                   Just v  -> (Insert, RBNode_elm_builtin Red k v empty empty)
 
             RBNode_elm_builtin clr key value left right ->
-                case k.compr {key-compr} of
+                case comp k key of
                   EQ ->
                     case alter (Just value) of
                       Nothing -> (Remove, rem clr left right)
@@ -188,12 +186,12 @@ update k alter dict =
 
 
 {-| Create a dictionary with one key-value pair. -}
-singleton : (Ord c) -> v -> Dict (Ord c) v
-singleton key value =
-    insert key value empty
+singleton : Ord c -> c -> v -> Dict c v
+singleton comp key value =
+    insert comp key value empty
 
 
-isBBlack : Dict (Ord k) v -> Bool
+isBBlack : Dict k v -> Bool
 isBBlack dict =
     case dict of
       RBNode_elm_builtin BBlack _ _ _ _ -> True
@@ -219,7 +217,7 @@ lessBlack color =
       NBlack -> Debug.crash "Can't make a negative black node less black!"
 
 
-lessBlackTree : Dict (Ord k) v -> Dict (Ord k) v
+lessBlackTree : Dict k v -> Dict k v
 lessBlackTree dict =
     case dict of
       RBNode_elm_builtin c k v l r -> RBNode_elm_builtin (lessBlack c) k v l r
@@ -237,7 +235,7 @@ reportRemBug msg c lgot rgot =
 
 
 -- Remove the top node from the tree, may leave behind BBlacks
-rem : NColor -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
+rem : NColor -> Dict k v -> Dict k v -> Dict k v
 rem c l r =
     case (l, r) of
       (RBEmpty_elm_builtin _, RBEmpty_elm_builtin _) ->
@@ -270,7 +268,7 @@ rem c l r =
 
 
 -- Kills a BBlack or moves it upward, may leave behind NBlack
-bubble : NColor -> (Ord k) -> v -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
+bubble : NColor -> k -> v -> Dict k v -> Dict k v -> Dict k v
 bubble c k v l r =
     if isBBlack l || isBBlack r
         then balance (moreBlack c) k v (lessBlackTree l) (lessBlackTree r)
@@ -278,7 +276,7 @@ bubble c k v l r =
 
 
 -- Removes rightmost node, may leave root as BBlack
-remove_max : NColor -> (Ord k) -> v -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
+remove_max : NColor -> k -> v -> Dict k v -> Dict k v -> Dict k v
 remove_max c k v l r =
     case r of
       RBEmpty_elm_builtin _ ->
@@ -289,19 +287,19 @@ remove_max c k v l r =
 
 
 -- generalized tree balancing act
-balance : NColor -> (Ord k) -> v -> Dict (Ord k) v -> Dict (Ord k) v -> Dict (Ord k) v
+balance : NColor -> k -> v -> Dict k v -> Dict k v -> Dict k v
 balance c k v l r =
     balance_node (RBNode_elm_builtin c k v l r)
 
 
-blackish : Dict (Ord k) v -> Bool
+blackish : Dict k v -> Bool
 blackish t =
     case t of
       RBNode_elm_builtin c _ _ _ _ -> c == Black || c == BBlack
       RBEmpty_elm_builtin _        -> True
 
 
-balance_node : Dict (Ord k) v -> Dict (Ord k) v
+balance_node : Dict k v -> Dict k v
 balance_node t =
   let assemble col xk xv yk yv zk zv a b c d =
         RBNode_elm_builtin (lessBlack col) yk yv (RBNode_elm_builtin Black xk xv a b) (RBNode_elm_builtin Black zk zv c d)
@@ -333,7 +331,7 @@ balance_node t =
 
 
 -- make the top node black
-blacken : Dict (Ord k) v -> Dict (Ord k) v
+blacken : Dict k v -> Dict k v
 blacken t =
     case t of
       RBEmpty_elm_builtin _ -> RBEmpty_elm_builtin LBlack
@@ -341,7 +339,7 @@ blacken t =
 
 
 -- make the top node red
-redden : Dict (Ord k) v -> Dict (Ord k) v
+redden : Dict k v -> Dict k v
 redden t =
     case t of
       RBEmpty_elm_builtin _ -> Debug.crash "can't make a Leaf red"
@@ -349,7 +347,7 @@ redden t =
 
 
 {-| Apply a function to all values in a dictionary. -}
-map : ((Ord c) -> a -> b) -> Dict (Ord c) a -> Dict (Ord c) b
+map : (c -> a -> b) -> Dict c a -> Dict c b
 map f dict =
     case dict of
       RBEmpty_elm_builtin LBlack ->
@@ -361,7 +359,7 @@ map f dict =
 
 {-| Fold over the key-value pairs in a dictionary, in order from lowest
 key to highest key. -}
-foldl : ((Ord c) -> v -> b -> b) -> b -> Dict (Ord c) v -> b
+foldl : (c -> v -> b -> b) -> b -> Dict c v -> b
 foldl f acc dict =
     case dict of
       RBEmpty_elm_builtin LBlack -> acc
@@ -372,7 +370,7 @@ foldl f acc dict =
 
 {-| Fold over the key-value pairs in a dictionary, in order from highest
 key to lowest key. -}
-foldr : ((Ord c) -> v -> b -> b) -> b -> Dict (Ord c) v -> b
+foldr : (c -> v -> b -> b) -> b -> Dict c v -> b
 foldr f acc t =
     case t of
       RBEmpty_elm_builtin LBlack -> acc
@@ -383,55 +381,55 @@ foldr f acc t =
 
 {-| Combine two dictionaries. If there is a collision, preference is given
 to the first dictionary. -}
-union : Dict (Ord c) v -> Dict (Ord c) v -> Dict (Ord c) v
-union t1 t2 =
-    foldl insert t2 t1
+union : Ord c -> Dict c v -> Dict c v -> Dict c v
+union comp t1 t2 =
+    foldl (insert comp) t2 t1
 
 
 {-| Keep a key-value pair when its key appears in the second dictionary.
 Preference is given to values in the first dictionary. -}
-intersect : Dict (Ord c) v -> Dict (Ord c) v -> Dict (Ord c) v
-intersect t1 t2 =
-    filter (\k _ -> k `member` t2) t1
+intersect : Ord c -> Dict c v -> Dict c v -> Dict c v
+intersect comp t1 t2 =
+    filter comp (\k _ -> (member comp) k t2) t1
 
 
 {-| Keep a key-value pair when its key does not appear in the second dictionary.
 -}
-diff : Dict (Ord c) v -> Dict (Ord c) v -> Dict (Ord c) v
-diff t1 t2 =
-    foldl (\k v t -> remove k t) t1 t2
+diff : Ord c -> Dict c v -> Dict c v -> Dict c v
+diff comp t1 t2 =
+    foldl (\k v t -> remove comp k t) t1 t2
 
 
 {-| Get all of the keys in a dictionary. -}
-keys : Dict (Ord c) v -> List (Ord c)
+keys : Dict c v -> List c
 keys dict =
     foldr (\key value keyList -> key :: keyList) [] dict
 
 
 {-| Get all of the values in a dictionary. -}
-values : Dict (Ord c) v -> List v
+values : Dict c v -> List v
 values dict =
     foldr (\key value valueList -> value :: valueList) [] dict
 
 
 {-| Convert a dictionary into an association list of key-value pairs. -}
-toList : Dict (Ord c) v -> List ((Ord c),v)
+toList : Dict c v -> List (c,v)
 toList dict =
     foldr (\key value list -> (key,value) :: list) [] dict
 
 
 {-| Convert an association list into a dictionary. -}
-fromList : List ((Ord c),v) -> Dict (Ord c) v
-fromList assocs =
-    List.foldl (\(key,value) dict -> insert key value dict) empty assocs
+fromList : Ord c -> List (c,v) -> Dict c v
+fromList comp assocs =
+    List.foldl (\(key,value) dict -> insert comp key value dict) empty assocs
 
 
 {-| Keep a key-value pair when it satisfies a predicate. -}
-filter : ((Ord c) -> v -> Bool) -> Dict (Ord c) v -> Dict (Ord c) v
-filter predicate dictionary =
+filter : Ord c -> (c -> v -> Bool) -> Dict c v -> Dict c v
+filter comp predicate dictionary =
     let add key value dict =
             if predicate key value
-                then insert key value dict
+                then insert comp key value dict
                 else dict
     in
         foldl add empty dictionary
@@ -441,11 +439,11 @@ filter predicate dictionary =
 contains all key-value pairs which satisfy the predicate, and the second
 contains the rest.
 -}
-partition : ((Ord c) -> v -> Bool) -> Dict (Ord c) v -> (Dict (Ord c) v, Dict (Ord c) v)
-partition predicate dict =
+partition : Ord c -> (c -> v -> Bool) -> Dict c v -> (Dict c v, Dict c v)
+partition comp predicate dict =
     let add key value (t1, t2) =
            if predicate key value
-               then (insert key value t1, t2)
-               else (t1, insert key value t2)
+               then (insert comp key value t1, t2)
+               else (t1, insert comp key value t2)
     in
         foldl add (empty, empty) dict
